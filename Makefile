@@ -7,6 +7,9 @@ STATE_BUCKET ?= $(PROJECT_ID)-tfstate
 ARGOCD_CHART ?= 10.9.6
 
 TF       := terraform -chdir=infra/terraform
+
+# kubectl needs gke-gcloud-auth-plugin, which Homebrew's gcloud keeps off PATH.
+export PATH := $(shell gcloud info --format='value(installation.sdk_root)' 2>/dev/null)/bin:$(PATH)
 MY_IP    := $(shell curl -s https://checkip.amazonaws.com)
 TF_VARS  := -var project_id=$(PROJECT_ID) -var 'admin_cidrs=["$(MY_IP)/32"]'
 
