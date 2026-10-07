@@ -1,0 +1,88 @@
+# vLLM serving Qwen2.5-0.5B-Instruct (Apache-2.0) on CPU.
+# Phase 6 swaps the image to vllm/vllm-openai and requests an nvidia.com/gpu.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-server-v1
+  labels: &labels
+    app.kubernetes.io/name: model-server
+    app.kubernetes.io/part-of: lending-assistant
+    model-version: v1
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      nodeSelector:
+        pool: inference
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: inference
+          effect: NoSchedule
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai-cpu:v0.31.0
+          command: ["vllm", "serve"]
+          args:
+            - Qwen/Qwen2.5-0.5B-Instruct
+            - --served-model-name=qwen2.5-0.5b-instruct
+            - --max-model-len=4096
+            - --dtype=float32
+            - --port=8000
+          env:
+            - name: HOME
+              value: /tmp
+            - name: HF_HOME
+              value: /models
+            - name: VLLM_CACHE_ROOT
+              value: /tmp/vllm
+            - name: VLLM_CPU_KVCACHE_SPACE
+              value: "4"
+          ports:
+            - name: http
+              containerPort: 8000
+          resources:
+            requests:
+              cpu: "3"
+              memory: 10Gi
+            limits:
+              memory: 12Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+            failureThreshold: 90
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 20
+            failureThreshold: 3
+          volumeMounts:
+            - {name: models, mountPath: /models}
+            - {name: tmp, mountPath: /tmp}
+            - {name: shm, mountPath: /dev/shm}
+      volumes:
+        - name: models
+          emptyDir: {sizeLimit: 10Gi}
+        - name: tmp
+          emptyDir: {sizeLimit: 5Gi}
+        - name: shm
+          emptyDir: {medium: Memory, sizeLimit: 1Gi}

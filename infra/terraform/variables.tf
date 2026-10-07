@@ -78,3 +78,15 @@ variable "budget_currency" {
   type        = string
   default     = "GBP"
 }
+
+variable "inference_machine_type" {
+  description = "Machine type for the CPU inference pool (needs AVX-512 for vLLM CPU)."
+  type        = string
+  default     = "n2-standard-4"
+}
+
+variable "github_repo" {
+  description = "GitHub repository (owner/name) allowed to publish images via Workload Identity Federation."
+  type        = string
+  default     = "abdihakim-said/llm-pilot-to-production"
+}

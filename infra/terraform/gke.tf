@@ -88,6 +88,12 @@ resource "google_container_cluster" "this" {
     }
   }
 
+  # With the default pool removed, GKE reports the first managed pool's
+  # settings here; without this every plan wants to replace the cluster.
+  lifecycle {
+    ignore_changes = [node_config]
+  }
+
   depends_on = [google_project_service.this]
 }
 
