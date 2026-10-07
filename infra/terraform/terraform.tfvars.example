@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars (git-ignored). admin_cidrs is set by the Makefile
+# from your current public IP, so it is not needed here.
+
+project_id = "your-dedicated-project-id"
+
+# Optional: creates a budget alert at 50% / 90% / 100%.
+# billing_account_id = "XXXXXX-XXXXXX-XXXXXX"
+# budget_amount      = 100
+# budget_currency    = "GBP"
+
+# Phase 6 only:
+# gpu_pool_enabled = true

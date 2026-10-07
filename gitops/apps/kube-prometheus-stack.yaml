@@ -1,0 +1,63 @@
+# Prometheus + Grafana + Alertmanager. vLLM and gateway metrics plug in from Phase 1.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 92.0.0
+    helm:
+      valuesObject:
+        # GKE manages these control-plane components; scraping them only creates false alerts.
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        # Dataplane V2 has no kube-proxy.
+        kubeProxy:
+          enabled: false
+        prometheus:
+          prometheusSpec:
+            retention: 7d
+            # Pick up ServiceMonitors/PodMonitors from any namespace (vLLM, gateway, Langfuse).
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+            nodeSelector:
+              pool: system
+            resources:
+              requests: {cpu: 200m, memory: 1Gi}
+              limits: {memory: 2Gi}
+        alertmanager:
+          alertmanagerSpec:
+            nodeSelector:
+              pool: system
+        grafana:
+          # Password comes from a secret created by `make platform`, never the chart default.
+          admin:
+            existingSecret: grafana-admin
+            userKey: admin-user
+            passwordKey: admin-password
+          nodeSelector:
+            pool: system
+        prometheusOperator:
+          nodeSelector:
+            pool: system
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

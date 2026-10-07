@@ -1,0 +1,33 @@
+# Argo CD, installed once by `make platform`; everything else is GitOps.
+# Access via `make argocd` (port-forward), so no ingress or public endpoint.
+global:
+  nodeSelector:
+    pool: system
+
+configs:
+  params:
+    server.insecure: false
+
+dex:
+  enabled: false
+
+notifications:
+  enabled: false
+
+applicationSet:
+  replicas: 1
+
+controller:
+  resources:
+    requests: {cpu: 250m, memory: 512Mi}
+    limits: {memory: 1Gi}
+
+repoServer:
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {memory: 512Mi}
+
+server:
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+    limits: {memory: 256Mi}
