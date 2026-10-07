@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="ASSISTANT_")
 
     release: str = "dev"
-    prompt_version: str = "v1"
+    prompt_version: str = "v2"
     model_url: str = "http://model-server-v1.llm:8000"
     model_name: str = "qwen2.5-0.5b-instruct"
     model_timeout_s: float = 120.0
