@@ -1,9 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - deployment.yaml
+- deployment.yaml
 # Pinned by digest by the build pipeline.
 images:
-  - name: mlflow
-    newName: europe-west2-docker.pkg.dev/hl-llm-p2p-261007/llm-p2p/mlflow
-    newTag: pending-first-build
+- digest: sha256:78b748c411ef48a18f7cf683af34766ffed32ae46848f90a839a8f6888099bc7
+  name: mlflow
+  newName: europe-west2-docker.pkg.dev/hl-llm-p2p-261007/llm-p2p/mlflow
