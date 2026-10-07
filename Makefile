@@ -1,4 +1,5 @@
-PROJECT_ID   ?= $(shell gcloud config get-value project 2>/dev/null)
+# Project comes from terraform.tfvars, so other gcloud work is unaffected.
+PROJECT_ID   ?= $(shell sed -n 's/^project_id *= *"\(.*\)"/\1/p' infra/terraform/terraform.tfvars 2>/dev/null)
 REGION       ?= europe-west2
 ZONE         ?= europe-west2-a
 NAME         ?= llm-p2p
