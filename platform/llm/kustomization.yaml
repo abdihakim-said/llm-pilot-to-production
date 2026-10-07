@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: llm
 resources:
   - namespace.yaml
+  - model-server-v1/cache-pvc.yaml
   - model-server-v1/deployment.yaml
   - model-server-v1/service.yaml
   - assistant-api

@@ -48,7 +48,7 @@ spec:
             - name: HF_HOME
               value: /models
             - name: VLLM_CACHE_ROOT
-              value: /tmp/vllm
+              value: /models/vllm
             - name: VLLM_CPU_KVCACHE_SPACE
               value: "4"
             # "auto" bound compute to a single core (measured: 2.0 of 3.9 cores used,
@@ -86,7 +86,8 @@ spec:
             - {name: shm, mountPath: /dev/shm}
       volumes:
         - name: models
-          emptyDir: {sizeLimit: 10Gi}
+          persistentVolumeClaim:
+            claimName: model-server-v1-cache
         - name: tmp
           emptyDir: {sizeLimit: 5Gi}
         - name: shm

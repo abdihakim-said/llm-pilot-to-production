@@ -1,0 +1,12 @@
+# Survives pod restarts and spot pre-emption: model weights + vLLM's
+# torch.compile cache. Measured saving ~65s per restart (download + compile).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-server-v1-cache
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: standard-rwo
+  resources:
+    requests:
+      storage: 20Gi
