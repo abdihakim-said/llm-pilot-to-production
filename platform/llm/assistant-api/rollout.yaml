@@ -1,0 +1,83 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: assistant-api
+  labels:
+    app.kubernetes.io/name: assistant-api
+    app.kubernetes.io/part-of: lending-assistant
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: assistant-api
+  strategy:
+    canary:
+      canaryService: assistant-api-canary
+      stableService: assistant-api-stable
+      # Pods read these labels (downward API) to report stable/canary on every answer.
+      canaryMetadata:
+        labels:
+          role: canary
+      stableMetadata:
+        labels:
+          role: stable
+      steps:
+        - setWeight: 50
+        - pause: {duration: 60s}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: assistant-api
+        app.kubernetes.io/part-of: lending-assistant
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        pool: system
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: assistant-api
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: ASSISTANT_MODEL_URL
+              value: http://model-server-v1.llm:8000
+            - name: ASSISTANT_MODEL_NAME
+              value: qwen2.5-0.5b-instruct
+            - name: ASSISTANT_PROMPT_VERSION
+              value: v1
+            - name: ASSISTANT_MLFLOW_TRACKING_URI
+              value: http://mlflow.mlops:5000
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            periodSeconds: 15
+          volumeMounts:
+            - {name: podinfo, mountPath: /etc/podinfo}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: podinfo
+          downwardAPI:
+            items:
+              - path: labels
+                fieldRef:
+                  fieldPath: metadata.labels
+        - name: tmp
+          emptyDir: {}

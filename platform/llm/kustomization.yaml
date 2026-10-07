@@ -5,3 +5,4 @@ resources:
   - namespace.yaml
   - model-server-v1/deployment.yaml
   - model-server-v1/service.yaml
+  - assistant-api

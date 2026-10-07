@@ -4,3 +4,5 @@ rules:
   line-length: {max: 160}
   truthy: {check-keys: false}
   braces: {max-spaces-inside: 1}
+ignore: |
+  platform/llm/assistant-api/rollout-transform.yaml

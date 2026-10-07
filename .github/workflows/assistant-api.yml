@@ -1,0 +1,38 @@
+name: assistant-api
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/assistant-api/**", ".github/workflows/assistant-api.yml"]
+  pull_request:
+    paths: ["apps/assistant-api/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/assistant-api
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: apps/assistant-api/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check app tests
+      - run: pytest -q
+
+  publish:
+    needs: test
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/build-image.yml
+    with:
+      app: assistant-api
+    permissions:
+      contents: write
+      id-token: write

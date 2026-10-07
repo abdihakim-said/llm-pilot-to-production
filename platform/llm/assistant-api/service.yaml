@@ -1,0 +1,55 @@
+# All pods (what users hit), plus stable/canary views managed by Argo Rollouts.
+apiVersion: v1
+kind: Service
+metadata:
+  name: assistant-api
+  labels:
+    app.kubernetes.io/name: assistant-api
+spec:
+  selector:
+    app.kubernetes.io/name: assistant-api
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assistant-api-stable
+spec:
+  selector:
+    app.kubernetes.io/name: assistant-api
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assistant-api-canary
+spec:
+  selector:
+    app.kubernetes.io/name: assistant-api
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: assistant-api
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: assistant-api
+  endpoints:
+    - port: http
+      path: /metrics/
+      interval: 15s
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: assistant-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: assistant-api
