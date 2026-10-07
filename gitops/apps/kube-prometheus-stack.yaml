@@ -24,6 +24,11 @@ spec:
         # Dataplane V2 has no kube-proxy.
         kubeProxy:
           enabled: false
+        # GKE runs kube-dns, not CoreDNS.
+        coreDns:
+          enabled: false
+        kubeDns:
+          enabled: true
         prometheus:
           prometheusSpec:
             retention: 7d
