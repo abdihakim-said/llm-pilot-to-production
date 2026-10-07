@@ -4,6 +4,6 @@ resources:
 - deployment.yaml
 # Pinned by digest by the build pipeline.
 images:
-- digest: sha256:78b748c411ef48a18f7cf683af34766ffed32ae46848f90a839a8f6888099bc7
+- digest: sha256:29b31c6dff5d2eae84be4a3d17a95dfaba44bf0578658a7e1586b2e568f547c4
   name: mlflow
   newName: europe-west2-docker.pkg.dev/hl-llm-p2p-261007/llm-p2p/mlflow
