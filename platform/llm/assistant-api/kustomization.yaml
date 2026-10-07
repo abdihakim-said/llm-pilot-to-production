@@ -5,7 +5,7 @@ resources:
 - service.yaml
 # The image is pinned by digest by the build pipeline (.github/workflows/build-image.yml).
 images:
-- digest: sha256:b6fab1d41ed9f7b72d6040eb9bee8e4231eb7c1d86e7164b01341d67fefeca33
+- digest: sha256:79e842a9e7051acf9c9592c0d7c5504813086f8c98b887bd356c5010cc94b353
   name: assistant-api
   newName: europe-west2-docker.pkg.dev/hl-llm-p2p-261007/llm-p2p/assistant-api
 # Rollouts doesn't understand image references in its CRD without this.
