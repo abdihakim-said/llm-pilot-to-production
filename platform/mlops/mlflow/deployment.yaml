@@ -35,7 +35,7 @@ spec:
           args:
             - --host=0.0.0.0
             - --port=5000
-            - --workers=2
+            - --workers=1
             - --backend-store-uri=$(DB_URI)
             - --artifacts-destination=gs://hl-llm-p2p-261007-mlflow/artifacts
             - --serve-artifacts
@@ -50,7 +50,7 @@ spec:
             - {name: http, containerPort: 5000}
           resources:
             requests: {cpu: 200m, memory: 768Mi}
-            limits: {memory: 1536Mi}
+            limits: {memory: 2Gi}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
