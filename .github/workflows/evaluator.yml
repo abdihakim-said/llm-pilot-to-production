@@ -1,6 +1,7 @@
 name: evaluator
 
 on:
+  workflow_dispatch: {}
   push:
     branches: [main]
     paths: ["apps/evaluator/**", ".github/workflows/evaluator.yml"]
@@ -29,7 +30,7 @@ jobs:
 
   publish:
     needs: test
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     uses: ./.github/workflows/build-image.yml
     with:
       app: evaluator

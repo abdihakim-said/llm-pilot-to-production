@@ -1,6 +1,7 @@
 name: assistant-api
 
 on:
+  workflow_dispatch: {}
   push:
     branches: [main]
     paths: ["apps/assistant-api/**", ".github/workflows/assistant-api.yml"]
@@ -29,7 +30,7 @@ jobs:
 
   publish:
     needs: test
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     uses: ./.github/workflows/build-image.yml
     with:
       app: assistant-api

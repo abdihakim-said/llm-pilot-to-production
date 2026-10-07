@@ -77,6 +77,23 @@ def ask(client: httpx.Client, case: dict) -> Result:
                   round((time.perf_counter() - started) * 1000))
 
 
+def wait_until_ready(client: httpx.Client, timeout_s: float, poll_s: float = 10.0) -> dict | None:
+    """Wait for the target and its model to be ready, so a dependency outage is
+    reported as 'could not evaluate' instead of being blamed on the release."""
+    deadline = time.monotonic() + timeout_s
+    while True:
+        try:
+            r = client.get("/readyz", timeout=10)
+            if r.status_code == 200:
+                return r.json()
+            log.info("target not ready (%s), waiting", r.status_code)
+        except httpx.HTTPError as exc:
+            log.info("target unreachable (%s), waiting", exc)
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(poll_s)
+
+
 def log_to_mlflow(summary: dict, results: list[Result]) -> None:
     uri = os.environ.get("MLFLOW_TRACKING_URI")
     if not uri:
@@ -106,6 +123,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--expect-track", default=os.environ.get("EXPECT_TRACK"),
                    help="fail if answers come from another track (proves we tested the canary)")
     p.add_argument("--cases", default=os.environ.get("CASES", str(Path(__file__).parent.parent / "cases.yaml")))
+    p.add_argument("--ready-timeout", type=float, default=float(os.environ.get("READY_TIMEOUT_S", "600")),
+                   help="seconds to wait for the target's model to be ready before giving up")
     p.add_argument("--concurrency", type=int, default=int(os.environ.get("CONCURRENCY", "2")))
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -114,11 +133,11 @@ def main(argv: list[str] | None = None) -> int:
     cases, threshold = suite["cases"], float(suite["threshold"])
 
     with httpx.Client(base_url=args.target, timeout=180, headers={"X-User": "release-gate"}) as client:
-        try:
-            release = client.get("/v1/release").raise_for_status().json()
-        except httpx.HTTPError as exc:
-            log.error("target unreachable: %s", exc)
+        release = wait_until_ready(client, args.ready_timeout)
+        if release is None:
+            log.error("INCONCLUSIVE: target or model not ready after %ss; the release was not judged", args.ready_timeout)
             return 2
+        release.pop("status", None)
         with ThreadPoolExecutor(args.concurrency) as pool:
             results = list(pool.map(lambda c: ask(client, c), cases))
 

@@ -1,6 +1,7 @@
 name: mlflow
 
 on:
+  workflow_dispatch: {}
   push:
     branches: [main]
     paths: ["apps/mlflow/**", ".github/workflows/mlflow.yml"]

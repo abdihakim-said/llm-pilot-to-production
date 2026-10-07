@@ -35,3 +35,29 @@ def test_legit_question_blocked_is_a_failure():
 def test_never_phrases_fail_the_case():
     case = {"expect": "answer", "all": ["12,000"], "never": ["QQ123456C"]}
     assert not grade(case, body("For QQ123456C the minimum is £12,000."))[0]
+
+
+def test_waits_for_readiness_then_reports_inconclusive():
+    import httpx
+
+    from evaluator.run import wait_until_ready
+
+    calls = {"n": 0}
+
+    def handler(request):
+        calls["n"] += 1
+        return httpx.Response(503, json={"detail": "model server not ready"})
+
+    client = httpx.Client(base_url="http://t", transport=httpx.MockTransport(handler))
+    assert wait_until_ready(client, timeout_s=0.05, poll_s=0.01) is None
+    assert calls["n"] >= 2
+
+
+def test_ready_target_returns_release_info():
+    import httpx
+
+    from evaluator.run import wait_until_ready
+
+    client = httpx.Client(base_url="http://t", transport=httpx.MockTransport(
+        lambda r: httpx.Response(200, json={"status": "ready", "release": "r9"})))
+    assert wait_until_ready(client, timeout_s=1)["release"] == "r9"

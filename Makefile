@@ -13,7 +13,7 @@ export PATH := $(shell gcloud info --format='value(installation.sdk_root)' 2>/de
 MY_IP    := $(shell curl -s https://checkip.amazonaws.com)
 TF_VARS  := -var project_id=$(PROJECT_ID) -var 'admin_cidrs=["$(MY_IP)/32"]'
 
-.PHONY: help bootstrap init plan apply credentials platform up argocd grafana destroy lint
+.PHONY: help bootstrap init plan apply credentials platform up status images down argocd grafana destroy lint
 
 help: ## Show targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -48,7 +48,33 @@ platform: credentials ## Install Argo CD, create the Grafana secret, hand over t
 	  -f platform/argocd/values.yaml --wait
 	kubectl apply -f gitops/bootstrap/root-app.yaml
 
-up: init plan apply platform ## Everything, end to end
+up: init plan apply platform status ## Everything, end to end
+
+status: credentials ## Wait for GitOps apps to be healthy, then show apps and pods
+	@echo "Waiting for all Argo CD apps to be Synced/Healthy (first start ~10-15 min)..."
+	@for i in $$(seq 1 90); do \
+	  bad=$$(kubectl -n argocd get applications -o jsonpath='{range .items[*]}{.status.sync.status}/{.status.health.status}{"\n"}{end}' 2>/dev/null | grep -vc '^Synced/Healthy$$'); \
+	  [ "$$bad" = "0" ] && break; sleep 20; done
+	@kubectl -n argocd get applications
+	@kubectl get pods -n llm -L role
+	@kubectl get pods -n mlops
+
+images: ## Rebuild and pin all app images (after a full destroy or registry cleanup)
+	gh workflow run assistant-api.yml && gh workflow run evaluator.yml && gh workflow run mlflow.yml
+	@echo "Watch with: gh run list --limit 6"
+
+down: credentials ## Stop paying for compute: remove apps + disks, delete cluster and NAT. Keeps state, registry, buckets, CI identity
+	@read -p "Delete the cluster in $(PROJECT_ID)? Type the project id: " ans && [ "$$ans" = "$(PROJECT_ID)" ]
+	-kubectl -n argocd patch application root --type merge -p '{"metadata":{"finalizers":["resources-finalizer.argocd.argoproj.io"]}}'
+	-kubectl -n argocd delete application root --wait=true --timeout=10m
+	-kubectl delete pvc --all -n llm --wait=true --timeout=5m
+	-kubectl delete pvc --all -n mlops --wait=true --timeout=5m
+	$(TF) destroy $(TF_VARS) -auto-approve \
+	  -target=google_container_cluster.this \
+	  -target=google_compute_router_nat.this \
+	  -target=google_compute_router.this
+	@echo "Leftover disks (should be none):"
+	@gcloud compute disks list --project $(PROJECT_ID) --format="value(name,zone,sizeGb)"
 
 argocd: ## Argo CD UI on https://localhost:8080 (prints admin password)
 	@kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo
@@ -58,7 +84,7 @@ grafana: ## Grafana on http://localhost:3000 (prints admin password)
 	@kubectl -n monitoring get secret grafana-admin -o jsonpath='{.data.admin-password}' | base64 -d; echo
 	kubectl -n monitoring port-forward svc/kube-prometheus-stack-grafana 3000:80
 
-destroy: ## Tear down all cloud resources (state bucket is kept)
+destroy: ## Tear down EVERYTHING incl. registry and CI identity (pool IDs are reserved for 30 days afterwards)
 	@read -p "Destroy $(NAME) in $(PROJECT_ID)? Type the project id: " ans && [ "$$ans" = "$(PROJECT_ID)" ]
 	$(TF) destroy $(TF_VARS)
 
