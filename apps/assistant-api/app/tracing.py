@@ -7,6 +7,8 @@ of a streaming generator.
 
 import logging
 import os
+import threading
+import time
 from typing import Any
 
 from .config import settings
@@ -16,20 +18,29 @@ _enabled = False
 
 
 def configure() -> None:
-    global _enabled
+    """Connect to MLflow in the background so startup never waits on it."""
     if not settings.mlflow_tracking_uri:
         log.info("MLflow tracing disabled (no tracking URI)")
         return
     os.environ.setdefault("MLFLOW_ENABLE_ASYNC_TRACE_LOGGING", "true")
-    try:
-        import mlflow
+    os.environ.setdefault("MLFLOW_HTTP_REQUEST_MAX_RETRIES", "0")
+    os.environ.setdefault("MLFLOW_HTTP_REQUEST_TIMEOUT", "5")
+    threading.Thread(target=_connect, name="mlflow-connect", daemon=True).start()
 
-        mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
-        mlflow.set_experiment(settings.mlflow_experiment)
-        _enabled = True
-        log.info("MLflow tracing to %s", settings.mlflow_tracking_uri)
-    except Exception as exc:  # noqa: BLE001 - tracing is best-effort
-        log.warning("MLflow tracing unavailable: %s", exc)
+
+def _connect(retry_s: float = 30.0) -> None:
+    global _enabled
+    while not _enabled:
+        try:
+            import mlflow
+
+            mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
+            mlflow.set_experiment(settings.mlflow_experiment)
+            _enabled = True
+            log.info("MLflow tracing to %s", settings.mlflow_tracking_uri)
+        except Exception as exc:  # noqa: BLE001 - tracing is best-effort
+            log.warning("MLflow unavailable, retrying in %ss: %s", retry_s, exc)
+            time.sleep(retry_s)
 
 
 def start(name: str, span_type: str, parent: Any = None, inputs: Any = None,

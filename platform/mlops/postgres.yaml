@@ -1,0 +1,22 @@
+# MLflow backend store. CloudNativePG creates the secret mlflow-db-app (key: uri).
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: mlflow-db
+spec:
+  instances: 1
+  storage:
+    size: 5Gi
+    storageClass: standard-rwo
+  bootstrap:
+    initdb:
+      database: mlflow
+      owner: mlflow
+  affinity:
+    nodeSelector:
+      pool: system
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {memory: 512Mi}
+  monitoring:
+    enablePodMonitor: true

@@ -111,3 +111,13 @@ def test_rate_limit(client, model, monkeypatch):
 
 def test_metrics_exposed(client):
     assert "assistant_requests_total" in client.get("/metrics/").text
+
+
+def test_startup_does_not_wait_for_mlflow(monkeypatch):
+    import time
+
+    monkeypatch.setattr(settings, "mlflow_tracking_uri", "http://unreachable.invalid:5000")
+    started = time.perf_counter()
+    with TestClient(app) as c:
+        assert c.get("/healthz").status_code == 200
+    assert time.perf_counter() - started < 3

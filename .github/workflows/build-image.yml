@@ -8,6 +8,10 @@ on:
         description: Directory under apps/ and image name
         required: true
         type: string
+      gitops-path:
+        description: Kustomization directory whose image pin is updated
+        required: true
+        type: string
 
 env:
   REGISTRY: europe-west2-docker.pkg.dev/hl-llm-p2p-261007/llm-p2p
@@ -73,7 +77,7 @@ jobs:
 
       - name: Pin digest in GitOps
         run: |
-          cd platform/llm/${{ inputs.app }}
+          cd ${{ inputs.gitops-path }}
           kustomize edit set image "${{ inputs.app }}=$REGISTRY/${{ inputs.app }}@${{ steps.push.outputs.digest }}"
           git config user.name "release-bot"
           git config user.email "release-bot@users.noreply.github.com"

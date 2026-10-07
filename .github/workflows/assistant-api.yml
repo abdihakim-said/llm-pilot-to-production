@@ -33,6 +33,7 @@ jobs:
     uses: ./.github/workflows/build-image.yml
     with:
       app: assistant-api
+      gitops-path: platform/llm/assistant-api
     permissions:
       contents: write
       id-token: write

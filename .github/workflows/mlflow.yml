@@ -1,0 +1,19 @@
+name: mlflow
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/mlflow/**", ".github/workflows/mlflow.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    uses: ./.github/workflows/build-image.yml
+    with:
+      app: mlflow
+      gitops-path: platform/mlops/mlflow
+    permissions:
+      contents: write
+      id-token: write

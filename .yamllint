@@ -4,5 +4,7 @@ rules:
   line-length: {max: 160}
   truthy: {check-keys: false}
   braces: {max-spaces-inside: 1}
+  # kustomize edit (release bot) writes non-indented lists.
+  indentation: {indent-sequences: whatever}
 ignore: |
   platform/llm/assistant-api/rollout-transform.yaml
