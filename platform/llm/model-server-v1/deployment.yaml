@@ -55,10 +55,6 @@ spec:
             # 9.3 tokens/s). Use cores 0-2 for compute and leave 3 for the API server.
             - name: VLLM_CPU_OMP_THREADS_BIND
               value: "0-2"
-            # vLLM 0.31 CPU can't reload its AOT compile artifact ("'function' object has
-            # no attribute 'finalize_loading'"); the standard Inductor cache does reload.
-            - name: VLLM_USE_AOT_COMPILE
-              value: "0"
           ports:
             - name: http
               containerPort: 8000
