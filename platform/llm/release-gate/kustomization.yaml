@@ -4,6 +4,6 @@ resources:
 - analysis-template.yaml
 # Pinned by digest by the evaluator build pipeline.
 images:
-- digest: sha256:255e1793425ef908410b2240c01294758526551b7ea8539f889f4395fd60b4f1
+- digest: sha256:3e4409682f6408e0a590b584d07faa2613bff90ace738ae00e877e787e61a3a6
   name: evaluator
   newName: europe-west2-docker.pkg.dev/hl-llm-p2p-261007/llm-p2p/evaluator
