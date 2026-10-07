@@ -1,6 +1,6 @@
 extends: default
 rules:
   document-start: disable
-  line-length: {max: 140}
+  line-length: {max: 160}
   truthy: {check-keys: false}
   braces: {max-spaces-inside: 1}
