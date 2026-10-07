@@ -1,0 +1,85 @@
+# Alert rules for the platform. Alerts show in Grafana / Alertmanager (no
+# external receiver yet). Each alert links to its runbook.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: lending-assistant
+spec:
+  groups:
+    - name: lending-assistant.service
+      rules:
+        - alert: AssistantHighErrorRate
+          expr: |
+            sum(rate(assistant_requests_total{outcome="error"}[5m]))
+              / clamp_min(sum(rate(assistant_requests_total[5m])), 1e-9) > 0.05
+          for: 5m
+          labels: {severity: critical}
+          annotations:
+            summary: "Assistant error rate {{ $value | humanizePercentage }} (over 5%)"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#assistanthigherrorrate
+        - alert: AssistantSlowFirstToken
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(assistant_time_to_first_token_seconds_bucket[10m]))) > 20
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: "p95 time to first token {{ $value | humanizeDuration }} (over 20s)"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#assistantslowfirsttoken
+        - alert: AssistantNoReadyPods
+          expr: sum(rollout_info_replicas_available{name="assistant-api"}) < 1
+          for: 2m
+          labels: {severity: critical}
+          annotations:
+            summary: "No ready assistant-api pods"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#assistantnoreadypods
+
+    - name: lending-assistant.model
+      rules:
+        - alert: ModelServerDown
+          expr: sum(up{namespace="llm", service=~"model-server.*"}) < 1 or absent(up{namespace="llm", service=~"model-server.*"})
+          for: 3m
+          labels: {severity: critical}
+          annotations:
+            summary: "vLLM model server is not being scraped / is down"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#modelserverdown
+        - alert: ModelQueueBacklog
+          expr: sum(vllm:num_requests_waiting) > 5
+          for: 5m
+          labels: {severity: warning}
+          annotations:
+            summary: "{{ $value }} requests queued at the model server"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#modelqueuebacklog
+
+    - name: lending-assistant.releases
+      rules:
+        - alert: ReleaseRolledBack
+          expr: max by (name) (rollout_info{phase="Degraded"}) == 1
+          for: 1m
+          labels: {severity: warning}
+          annotations:
+            summary: "Rollout {{ $labels.name }} aborted: the release gate failed and traffic is back on stable"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#releaserolledback
+        - alert: ArgoAppNotHealthy
+          expr: max by (name, health_status) (argocd_app_info{health_status!~"Healthy|Progressing"}) == 1
+          for: 5m
+          labels: {severity: warning}
+          annotations:
+            summary: "Argo CD app {{ $labels.name }} is {{ $labels.health_status }}"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#argoappnothealthy
+        - alert: ArgoAppOutOfSync
+          expr: max by (name) (argocd_app_info{sync_status!="Synced"}) == 1
+          for: 10m
+          labels: {severity: warning}
+          annotations:
+            summary: "Argo CD app {{ $labels.name }} out of sync for 10m"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#argoappoutofsync
+
+    - name: lending-assistant.mlops
+      rules:
+        - alert: MLflowUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="mlops", deployment="mlflow"} < 1
+          for: 5m
+          labels: {severity: warning}
+          annotations:
+            summary: "MLflow is down: traces, feedback and release evidence are not being recorded"
+            runbook_url: https://github.com/abdihakim-said/llm-pilot-to-production/blob/main/docs/runbooks.md#mlflowunavailable

@@ -18,6 +18,11 @@ applicationSet:
   replicas: 1
 
 controller:
+  # argocd_app_info feeds the Platform Health dashboard and ArgoApp* alerts.
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
   resources:
     requests: {cpu: 250m, memory: 512Mi}
     limits: {memory: 1Gi}

@@ -29,6 +29,10 @@ spec:
           enabled: false
         kubeDns:
           enabled: true
+        # Lets dashboards group capacity by node pool.
+        kube-state-metrics:
+          metricLabelsAllowlist:
+            - nodes=[pool]
         prometheus:
           prometheusSpec:
             retention: 7d
