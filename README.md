@@ -12,6 +12,7 @@ A reference build by **Human Layer AI Ltd**: taking a GenAI pilot to secure, obs
 |---|---|---|
 | 0 | GKE foundations, GitOps, monitoring, CI | ✅ code ready |
 | 1 | KServe + vLLM serving | ⏳ |
+| 1b | Assistant UI (SSO, streaming chat, release badge) + release console | ⏳ |
 | 2 | Tracing & dashboards (OpenTelemetry, Langfuse) | ⏳ |
 | 3 | Evaluation-gated canary releases (Argo Rollouts) | ⏳ |
 | 4 | Governance: model inventory, audit trail, SS1/23 mapping | ⏳ |

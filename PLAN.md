@@ -74,6 +74,34 @@ Assumes part-time (~10–15 h/week). Each phase ends with something demo-able an
 - [ ] Load test with `k6` or `vllm bench`: record p50/p95 latency, tokens/sec, at 1/10/50 concurrent users.
 - **Demo:** curl the bank assistant; Grafana shows vLLM metrics.
 
+### Phase 1b — Assistant UI (weeks 3–4) · the face of the demo
+An internal "Lending Policy Assistant" that a bank's staff would actually use, and that a non-technical buyer understands in 30 seconds.
+
+**Stack:** Next.js (App Router) + TypeScript, Tailwind + shadcn/ui, streaming via the OpenAI-compatible API through the gateway (never directly to the model).
+
+**User experience**
+- [ ] Streaming chat with markdown, copy, regenerate, stop; conversation history per user.
+- [ ] **Release badge** on every answer: model + prompt version and *stable / canary* — makes the Phase 3 canary visible to the audience.
+- [ ] **Safety indicators:** "2 personal details redacted before reaching the model" (Phase 5), refusal messages that explain why.
+- [ ] 👍/👎 + comment feedback, sent to Langfuse against the trace (Phase 2).
+- [ ] Clear disclaimer banner ("AI-generated — verify against the policy manual"), graceful handling of rate limits, timeouts and model unavailability.
+- [ ] Polished design: dark/light themes, responsive, empty states, suggested questions, loading skeletons.
+
+**Release console (admin view, filled in Phases 3–4)**
+- [ ] Live rollout status (stable vs canary %, step, analysis results), eval scores per release, rollback history.
+- [ ] Model inventory and per-release audit records — the "show me evidence for model X" screen for risk teams.
+- [ ] Deep links to Langfuse traces and Grafana dashboards.
+
+**Enterprise requirements**
+- [ ] **SSO:** OIDC sign-in (Google Workspace now; Entra ID documented), roles `staff` and `risk-admin`; console restricted to `risk-admin`.
+- [ ] **Security:** server-side calls only (no API keys in the browser), strict CSP and security headers, CSRF protection, input length limits, non-root distroless image, signed with cosign, Trivy-scanned.
+- [ ] **Exposure:** GKE Gateway + Google-managed TLS on a subdomain (e.g. `assistant.demo.humanlayer.uk`), Cloud Armor rate limiting; optional IAP in front.
+- [ ] **Accessibility:** WCAG 2.2 AA, keyboard navigable, axe checks in CI.
+- [ ] **Quality gates in CI:** unit tests, Playwright end-to-end (streaming, feedback, error states), Lighthouse budget (performance/accessibility ≥ 90).
+- [ ] **Observability:** OpenTelemetry from browser request → gateway → model in one trace; web vitals to Grafana.
+- [ ] Deployed by Argo CD like everything else; two replicas, PodDisruptionBudget, HPA.
+- **Demo:** sign in with SSO, ask a lending question, watch the answer stream with its release badge, give feedback, then open the console and show the matching trace and audit record.
+
 ### Phase 2 — Observability (week 4) · B2
 - [ ] Self-hosted Langfuse via Helm; OpenTelemetry tracing from gateway → model.
 - [ ] Grafana dashboard: requests, queue depth, TTFT, tokens/sec, GPU util (cloud), cost/1k requests.
