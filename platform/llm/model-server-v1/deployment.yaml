@@ -51,6 +51,10 @@ spec:
               value: /tmp/vllm
             - name: VLLM_CPU_KVCACHE_SPACE
               value: "4"
+            # "auto" bound compute to a single core (measured: 2.0 of 3.9 cores used,
+            # 9.3 tokens/s). Use cores 0-2 for compute and leave 3 for the API server.
+            - name: VLLM_CPU_OMP_THREADS_BIND
+              value: "0-2"
           ports:
             - name: http
               containerPort: 8000
