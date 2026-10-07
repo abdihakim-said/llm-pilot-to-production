@@ -93,6 +93,7 @@ class RateLimiter:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _ = settings.system_prompt  # fail fast: a release with a missing prompt never becomes ready
     app.state.retriever = Retriever(load_chunks(settings.policy_dir))
     app.state.http = httpx.AsyncClient(base_url=settings.model_url, timeout=settings.model_timeout_s)
     app.state.limiter = RateLimiter(settings.rate_limit_per_minute)

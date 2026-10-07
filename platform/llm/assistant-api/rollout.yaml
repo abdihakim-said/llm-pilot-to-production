@@ -22,9 +22,16 @@ spec:
       stableMetadata:
         labels:
           role: stable
+      # Release gate: half the pods move to the new release, the evaluation
+      # suite runs against them, and only a pass promotes to 100%.
       steps:
         - setWeight: 50
-        - pause: {duration: 60s}
+        - analysis:
+            templates:
+              - templateName: release-gate
+            args:
+              - name: rollout
+                value: assistant-api
   template:
     metadata:
       labels:
@@ -51,8 +58,6 @@ spec:
               value: http://model-server-v1.llm:8000
             - name: ASSISTANT_MODEL_NAME
               value: qwen2.5-0.5b-instruct
-            - name: ASSISTANT_PROMPT_VERSION
-              value: v1
             - name: ASSISTANT_MLFLOW_TRACKING_URI
               value: http://mlflow.mlops:5000
           resources:
