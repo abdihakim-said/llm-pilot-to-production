@@ -62,6 +62,7 @@ spec:
               memory: 12Gi
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop: ["ALL"]
           startupProbe:
