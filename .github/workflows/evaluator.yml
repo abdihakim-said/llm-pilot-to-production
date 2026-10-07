@@ -1,0 +1,39 @@
+name: evaluator
+
+on:
+  push:
+    branches: [main]
+    paths: ["apps/evaluator/**", ".github/workflows/evaluator.yml"]
+  pull_request:
+    paths: ["apps/evaluator/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/evaluator
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: apps/evaluator/requirements*.txt
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check evaluator tests
+      - run: pytest -q
+
+  publish:
+    needs: test
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/build-image.yml
+    with:
+      app: evaluator
+      gitops-path: platform/llm/release-gate
+    permissions:
+      contents: write
+      id-token: write

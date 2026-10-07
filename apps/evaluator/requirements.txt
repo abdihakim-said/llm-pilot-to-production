@@ -1,0 +1,4 @@
+httpx==0.28.*
+pyyaml==6.*
+mlflow-skinny==3.16.1
+urllib3>=2.8.0

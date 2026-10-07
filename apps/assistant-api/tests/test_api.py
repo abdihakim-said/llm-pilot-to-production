@@ -121,3 +121,11 @@ def test_startup_does_not_wait_for_mlflow(monkeypatch):
     with TestClient(app) as c:
         assert c.get("/healthz").status_code == 200
     assert time.perf_counter() - started < 3
+
+
+def test_release_gate_is_not_rate_limited(client, model, monkeypatch):
+    model.post("/v1/chat/completions").mock(return_value=httpx.Response(200, content=_vllm_stream("ok")))
+    monkeypatch.setattr(app.state.limiter, "per_minute", 1)
+    body = {"stream": False, "messages": [{"role": "user", "content": "personal loan term?"}]}
+    codes = [client.post("/v1/chat", json=body, headers={"X-User": "release-gate"}).status_code for _ in range(3)]
+    assert codes == [200, 200, 200]

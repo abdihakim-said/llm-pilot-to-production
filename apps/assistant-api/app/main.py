@@ -219,7 +219,7 @@ async def generate(root: Any, chunks: list, history: list[Message], question: st
 
 def _identity(request: Request, x_user: str | None) -> str:
     user = x_user or "anonymous"
-    if not app.state.limiter.allow(user):
+    if user not in settings.rate_limit_exempt and not app.state.limiter.allow(user):
         raise HTTPException(429, "Too many questions in the last minute. Please wait a moment.")
     return user
 
