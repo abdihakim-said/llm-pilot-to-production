@@ -1,6 +1,6 @@
 # LLM Pilot-to-Production Platform
 
-A reference build by **Human Layer AI Ltd**: taking a GenAI pilot to secure, observable, cost-controlled, audit-ready production on Kubernetes (GKE).
+A reference build by **HumanLayer AI Ltd**: taking a GenAI pilot to secure, observable, cost-controlled, audit-ready production on Kubernetes (GKE).
 
 **Scenario:** a UK bank's internal GenAI assistant is stuck in pilot. Risk and IT block go-live over data residency, cost, observability, unsafe releases, model governance (PRA SS1/23) and security. This repo solves each blocker and measures the result. See [PLAN.md](PLAN.md).
 
@@ -8,16 +8,23 @@ A reference build by **Human Layer AI Ltd**: taking a GenAI pilot to secure, obs
 
 ## Status
 
+**Delivered (phases 0–3):** a private GKE platform in London with GitOps, self-hosted model serving with RAG and PII redaction, full LLM observability, and canary releases that only promote when the evaluation suite passes.
+
 | Phase | Scope | Status |
 |---|---|---|
-| 0 | GKE foundations, GitOps, monitoring, CI | ✅ |
-| 1 | vLLM serving + assistant-api (RAG, PII redaction, release metadata) | ✅ |
-| 1b | Assistant UI (SSO, streaming chat, release badge) + release console | ⏳ |
-| 2 | Observability: MLflow 3 traces, Grafana dashboards, alert rules, runbooks | ✅ |
-| 3 | Evaluation-gated canary releases (Argo Rollouts) | ✅ (gate improvement pending, see RESUME.md) |
-| 4 | Governance: model inventory, audit trail, SS1/23 mapping | ⏳ |
-| 5 | Security hardening | ⏳ |
-| 6 | GPU serving + cost benchmark | ⏳ |
+| 0 | GKE foundations, GitOps, monitoring, CI | ✅ Delivered |
+| 1 | vLLM serving + assistant-api (RAG, PII redaction, release metadata) | ✅ Delivered |
+| 2 | Observability: MLflow 3 traces, Grafana dashboards, alert rules, runbooks | ✅ Delivered |
+| 3 | Evaluation-gated canary releases (Argo Rollouts) | ✅ Delivered |
+
+**Roadmap:**
+
+| Phase | Scope |
+|---|---|
+| 1b | Assistant UI (SSO, streaming chat, release badge) + release console |
+| 4 | Governance: model inventory, audit trail, SS1/23 mapping |
+| 5 | Security hardening |
+| 6 | GPU serving + cost benchmark |
 
 ## Architecture (Phase 0)
 
