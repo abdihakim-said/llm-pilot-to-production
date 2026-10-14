@@ -26,7 +26,11 @@ A reference build by **HumanLayer AI Ltd**: taking a GenAI pilot to secure, obse
 | 5 | Security hardening |
 | 6 | GPU serving + cost benchmark |
 
-## Architecture (Phase 0)
+## Architecture
+
+![Architecture: Argo CD syncs the platform; assistant-api releases as an Argo Rollouts canary that only promotes when the evaluation suite and error-rate gate pass](docs/img/architecture.png)
+
+### Phase 0 foundations
 
 - **GKE Standard, zonal, `europe-west2` (London)** — private nodes, Cloud NAT egress, control plane locked to the admin IP, Workload Identity, Shielded Nodes, Dataplane V2 (NetworkPolicy enforcement), least-privilege node service account, spot `e2-standard-4` system pool (1–3 nodes).
 - **GitOps:** Argo CD app-of-apps (`gitops/apps/`) manages cert-manager and kube-prometheus-stack.
