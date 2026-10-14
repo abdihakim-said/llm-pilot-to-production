@@ -8,3 +8,7 @@ crash.log
 .DS_Store
 .env
 RESUME.md
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/

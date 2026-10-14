@@ -1,5 +1,7 @@
 # LLM Pilot-to-Production Platform
 
+[![ci](https://github.com/abdihakim-said/llm-pilot-to-production/actions/workflows/ci.yml/badge.svg)](https://github.com/abdihakim-said/llm-pilot-to-production/actions/workflows/ci.yml)
+
 A reference build by **HumanLayer AI Ltd**: taking a GenAI pilot to secure, observable, cost-controlled, audit-ready production on Kubernetes (GKE).
 
 **Scenario:** a UK bank's internal GenAI assistant is stuck in pilot. Risk and IT block go-live over data residency, cost, observability, unsafe releases, model governance (PRA SS1/23) and security. This repo solves each blocker and measures the result. See [PLAN.md](PLAN.md).
